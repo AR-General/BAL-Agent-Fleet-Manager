@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.env.*
+data
+*.md
+**/*.test.ts
+**/*.tsbuildinfo
+.git
+.gitignore
+scripts

@@ -1,0 +1,31 @@
+# Dependencies and build
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store
+
+# Secrets and runtime data (keep on disk; never commit)
+.env
+.env.local
+.env.*.local
+*.log
+backend/data/
+frontend/dist/
+
+# Private meshes / scratch
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.bmp
+*.vrm
+*.vroid
+*.png
+!docs/screenshots/*.png
+/local/*
+!/local/README.md
+
+# Internal planning (files stay locally)
+docs/followups/
+docs/plans/

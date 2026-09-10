@@ -1,0 +1,30 @@
+{
+  "name": "oc-controller-frontend",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --experimental-strip-types --test src/lib/agentStatusGestures.test.ts src/lib/toolActionToasts.test.ts src/lib/truncateDisplayText.test.ts src/lib/atMention.test.ts src/lib/markdownGfm.test.ts src/lib/motionFeedRows.test.ts src/lib/interactionAckSettings.test.ts src/lib/instanceEndpoints.test.ts src/lib/participantPresence.test.ts src/lib/fishVoices.test.ts src/lib/ttsUtterances.test.ts src/lib/ttsSanitize.test.ts src/lib/ttsCueTiming.test.ts src/lib/ttsTagPipeline.test.ts src/lib/lipSyncSettings.test.ts src/lib/avatarLivePreview.test.ts src/lib/wasdMove.test.ts src/lib/ttsSpeakQueue.test.ts src/lib/ttsHistorySkip.test.ts src/lib/groupSceneOccupants.test.ts src/lib/scenePoseStorage.test.ts src/lib/tokenSpend.test.ts src/lib/scenePopout.test.ts src/lib/chatToolCalls.test.ts src/lib/ttsSpeakMode.test.ts src/lib/llmModelMeta.test.ts src/lib/resolveStoredVrmUrl.test.ts src/lib/agentAvatarStore.test.ts src/lib/instanceRuntimeForm.test.ts"
+  },
+  "dependencies": {
+    "@openclaw/character-kit": "file:../../dev-vrm/packages/character-kit",
+    "@openclaw/voice-kit": "file:../../dev-vrm/packages/voice-kit",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^6.28.2",
+    "remark-gfm": "^4.0.1",
+    "three": "^0.180.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7"
+  }
+}
