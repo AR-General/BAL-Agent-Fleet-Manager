@@ -10,6 +10,8 @@ OpenClaw, Hermes, and any OpenAI-compatible API remain supported for private / s
 
 3D motion and voice: free **`@nexus/character-kit` / `@nexus/voice-kit`** (MIT), typically checked out as a sibling `../dev-vrm`. This repo is an **integration example**; [AssetsNexus.org](https://assetsnexus.org) is a **utilizing platform**.
 
+This repo is a **small multi-agent 3D playground** (test harness for the kits). BIM/IFC sites, wiring, machine telemetry, and in-browser VR/AR are **not in scope here**; they are managed on [AssetsNexus.org](https://assetsnexus.org).
+
 ![Group chat with 3D VRM companions](docs/screenshots/01-group-chat-3d.png)
 
 ![Operator portal](docs/screenshots/02-operator-portal.png)

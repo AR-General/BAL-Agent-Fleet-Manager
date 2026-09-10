@@ -2,7 +2,7 @@
 
 React + Vite UI for the small private fleet cockpit (`http://localhost:3080` in dev). Proxies `/api` to the backend on `:3800`.
 
-Screenshots and product framing: [package README](../README.md). For professional agent ops, [Nexus Agents](https://assetsnexus.org).
+Screenshots and product framing: [package README](../README.md). For professional agent ops, [Nexus Agents](https://assetsnexus.org). BIM/IFC, wiring, and VR/AR are out of scope here (AssetsNexus.org).
 
 ## Pages
 
