@@ -17,7 +17,7 @@ import {
   type ClothesOverlayPiece,
   type LoadedGestureInfo,
   type SceneOccupantPose,
-} from "@openclaw/character-kit";
+} from "@nexus/character-kit";
 import { useCompanionSceneControls } from "../../hooks/useCompanionSceneControls";
 import { useWasdMoveInput } from "../../hooks/useWasdMoveInput";
 import { api } from "../../api/client";
@@ -825,7 +825,7 @@ export function MultiAvatarViewport({
   });
 
   const playTimedSteps = useCallback(
-    (steps: import("@openclaw/character-kit").InlineSequenceStep[]) => {
+    (steps: import("@nexus/character-kit").InlineSequenceStep[]) => {
       if (!steps.length) return;
       const nextAvatars = avatarsRef.current;
       const slug = resolveSpeakSlug(ttsAuthorSlugRef.current, focusedSlugRef.current, nextAvatars);

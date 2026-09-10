@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { StreamingPcmPlayer, resumeAudioContext } from "@openclaw/voice-kit/pcm-player";
-import { SpeachesStt } from "@openclaw/voice-kit/stt-speaches";
-import { FishTts } from "@openclaw/voice-kit/tts-fish";
-import type { SttProvider, VadSession } from "@openclaw/voice-kit/types";
+import { StreamingPcmPlayer, resumeAudioContext } from "@nexus/voice-kit/pcm-player";
+import { SpeachesStt } from "@nexus/voice-kit/stt-speaches";
+import { FishTts } from "@nexus/voice-kit/tts-fish";
+import type { SttProvider, VadSession } from "@nexus/voice-kit/types";
 import { fetchFishTtsPcmStream } from "../../lib/fishTts";
 import { resolveFishVoiceId } from "../../lib/fishVoices";
 import { useFishVoices } from "../../hooks/useFishVoices";
@@ -96,7 +96,7 @@ export function VoiceDock({ onTranscript, ttsText, fishApiKey, voiceId }: Props)
 
   async function ensureFallbackStt(): Promise<SttProvider> {
     if (!fallbackSttRef.current) {
-      const { BrowserWhisperStt } = await import("@openclaw/voice-kit/stt-browser-whisper");
+      const { BrowserWhisperStt } = await import("@nexus/voice-kit/stt-browser-whisper");
       fallbackSttRef.current = new BrowserWhisperStt({ model: "Xenova/whisper-base.en" });
     }
     return fallbackSttRef.current;
@@ -145,7 +145,7 @@ export function VoiceDock({ onTranscript, ttsText, fishApiKey, voiceId }: Props)
       return;
     }
 
-    const { createSileroVadSession } = await import("@openclaw/voice-kit/vad-silero");
+    const { createSileroVadSession } = await import("@nexus/voice-kit/vad-silero");
     const vad = await createSileroVadSession({
       onSpeechStart: () => {
         setStatus("speech");

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { CompanionHost } from "@openclaw/character-kit";
+import type { CompanionHost } from "@nexus/character-kit";
 import {
   coalesceAgentStatusPhase,
   isLiveAgentState,

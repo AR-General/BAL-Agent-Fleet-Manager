@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CompanionHost } from "@openclaw/character-kit";
+import type { CompanionHost } from "@nexus/character-kit";
 
 type PlayableHost = Pick<CompanionHost, "playInlineTags">;
 

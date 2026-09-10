@@ -3,7 +3,7 @@ import {
   defaultClothesTransform,
   normalizeClothesTransform,
   type ClothesPieceTransform,
-} from "@openclaw/character-kit";
+} from "@nexus/character-kit";
 
 type Props = {
   value?: Partial<ClothesPieceTransform> | null;

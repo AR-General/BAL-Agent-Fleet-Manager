@@ -1,4 +1,4 @@
-import type { SceneOccupantPose, SceneRoomOccupant } from "@openclaw/character-kit";
+import type { SceneOccupantPose, SceneRoomOccupant } from "@nexus/character-kit";
 import {
   presenceTone,
   presenceToneHex,

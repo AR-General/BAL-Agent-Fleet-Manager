@@ -2,7 +2,7 @@
  * Per-conversation shared-scene XZ poses. Survives refresh even when the
  * in-memory backend viewport row is gone.
  */
-import type { SceneOccupantPose } from "@openclaw/character-kit";
+import type { SceneOccupantPose } from "@nexus/character-kit";
 
 export const SCENE_POSE_STORAGE_PREFIX = "oc-chat-scene-poses:";
 

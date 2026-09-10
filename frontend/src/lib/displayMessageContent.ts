@@ -1,4 +1,4 @@
-import { defaultInlineCatalog, parseInlineTags } from "@openclaw/character-kit";
+import { defaultInlineCatalog, parseInlineTags } from "@nexus/character-kit";
 import { sanitizeTtsText } from "./ttsSanitize";
 
 const INLINE_TAG_CATALOG = defaultInlineCatalog();

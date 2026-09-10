@@ -57,8 +57,8 @@ export default defineConfig({
   resolve: {
     alias: {
       // Directory alias so TTS can import pcm-player / tts-fish without evaluating Whisper.
-      "@openclaw/voice-kit": voiceKitSrc,
-      "@openclaw/character-kit": characterKitSrc,
+      "@nexus/voice-kit": voiceKitSrc,
+      "@nexus/character-kit": characterKitSrc,
     },
   },
   server: {

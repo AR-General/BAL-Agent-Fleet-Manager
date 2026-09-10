@@ -2,7 +2,7 @@
  * Single-participant CompanionHost cell for split (per-avatar) scene layout.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CompanionHost, type ClothesOverlayPiece } from "@openclaw/character-kit";
+import { CompanionHost, type ClothesOverlayPiece } from "@nexus/character-kit";
 import { useAgentStatusMotions } from "../../hooks/useAgentStatusMotions";
 import { useInlineTagPerformance } from "../../hooks/useInlineTagPerformance";
 import { parseStatusMotions, type AgentLiveStatus } from "../../lib/agentStatusGestures";

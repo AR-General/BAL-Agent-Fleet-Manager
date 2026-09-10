@@ -2,7 +2,7 @@ import {
   DEFAULT_WALK_TRAIL,
   normalizeWalkTrailOptions,
   type WalkTrailOptions,
-} from "@openclaw/character-kit";
+} from "@nexus/character-kit";
 
 /** Presence `settings` keys for the walk trail. */
 export const WALK_TRAIL_ENABLED_KEY = "walk_trail_enabled";

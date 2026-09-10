@@ -17,7 +17,7 @@ Screenshots and product framing: [package README](../README.md). For professiona
 
 ## VRM runtime
 
-Depends on `@openclaw/character-kit` and `@openclaw/voice-kit` (`file:../../dev-vrm/...`, or set `DEV_VRM_ROOT`). Vite aliases to **source**.
+Depends on `@nexus/character-kit` and `@nexus/voice-kit` (`file:../../dev-vrm/...`, or set `DEV_VRM_ROOT`). Vite aliases to **source**.
 
 Meshes: drop into `OC_VRM_DIR` or **Upload VRM**. Catalog for playground-style demo URLs: `/dev-vrm-assets/vrm/` (gitignored binaries).
 

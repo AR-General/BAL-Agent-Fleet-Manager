@@ -24,6 +24,6 @@ npm run db:seed-demo   # optional example instances alpha/beta
 - Chat WS auto-reconnect; subscribe sends `session_sync` so a backend restart cannot leave the UI stuck on “writing”
 - Fleet events with tags + mentions
 - Voice dock (Speaches / Whisper + Fish TTS)
-- Multi-avatar 3D viewport (`@openclaw/character-kit` `SceneRoom`)
+- Multi-avatar 3D viewport (`@nexus/character-kit` `SceneRoom`)
 - Group roster: **+ Add** in the participant row and **Members** (add/remove)
 - Workspace file API under `/api/v1/workspace`

@@ -6,7 +6,7 @@ import {
   PRESENCE_MOODS,
   type ClothesPieceTransform,
   type CompanionHost,
-} from "@openclaw/character-kit";
+} from "@nexus/character-kit";
 import { api } from "../../api/client";
 import { readAgentAvatar, writeAgentAvatar } from "../../lib/agentAvatarStore";
 import { persistableVrmUrl } from "../../lib/resolveStoredVrmUrl";

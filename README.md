@@ -8,7 +8,7 @@ This cockpit was built to coordinate agents while [AssetsNexus.org](https://asse
 
 OpenClaw, Hermes, and any OpenAI-compatible API remain supported for private / self-hosted fleets.
 
-3D motion and voice: free **character-kit / voice-kit** (MIT), typically checked out as a sibling `../dev-vrm`. This repo is an **integration example**; [AssetsNexus.org](https://assetsnexus.org) is a **utilizing platform**.
+3D motion and voice: free **`@nexus/character-kit` / `@nexus/voice-kit`** (MIT), typically checked out as a sibling `../dev-vrm`. This repo is an **integration example**; [AssetsNexus.org](https://assetsnexus.org) is a **utilizing platform**.
 
 ![Group chat with 3D VRM companions](docs/screenshots/01-group-chat-3d.png)
 
@@ -47,9 +47,10 @@ Optional: `npm run db:seed-demo` registers example instances `alpha` / `beta`. P
 
 | Runtime | Configure | Health |
 |---------|-----------|--------|
+| Nexus | Host, API + HTTPS ports, API key | `/health` |
 | OpenClaw | Host, fleet ports, TLS, gateway token | `/healthz` |
 | Hermes | Host, API + HTTPS ports, API key | `/health` |
-| OpenAI-like | `api_base`, API key, default model (Nexus Agents, OpenAI, …) | `/v1/models` |
+| OpenAI-like | `api_base`, API key, default model (OpenAI, …) | `/v1/models` |
 
 Create from **Instances**, or create instance + **Agent** profile together. Default VRM and Fish voice live on instance presence (`oc-vrm:{uuid}`, JWT file fetch — not a public URL).
 
@@ -66,7 +67,7 @@ Portal: **VRMs** (`/vrms`) — scan, upload, rename, 3D preview. Assign on **Age
 
 Model catalogs: [VRoid Hub](https://hub.vroid.com/), [VRoid Studio](https://vroid.com/en/studio), [vrm.dev](https://vrm.dev/en/), [three-vrm sample](https://github.com/pixiv/three-vrm), [Ready Player Me](https://readyplayer.me/), [BOOTH](https://booth.pm/). Read each VRM license.
 
-The frontend `file:` deps and Vite aliases expect **character-kit** at `../dev-vrm` (sibling of this repo, or `services/dev-vrm` in the monorepo). Override with `DEV_VRM_ROOT` if needed.
+The frontend `file:` deps and Vite aliases expect **`@nexus/character-kit`** at `../dev-vrm` (sibling of this repo, or `services/dev-vrm` in the monorepo). Override with `DEV_VRM_ROOT` if needed.
 
 ## Docker
 
@@ -96,4 +97,3 @@ Never commit `backend/.env`. Copy `.env.example`. Chat is encrypted at rest (`CH
 | Internal plans | `docs/followups/`, `docs/plans/` (gitignored, not deleted) |
 
 Console HTTP: `HTTP_ACCESS_CONSOLE=quiet` (4xx/5xx only), `all`, or `off`.
-# BAL-Agent-Fleet-Manager

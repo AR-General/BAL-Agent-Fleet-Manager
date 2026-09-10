@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   formatClipDuration,
   type LoadedGestureInfo,
-} from "@openclaw/character-kit";
+} from "@nexus/character-kit";
 
 type Props = {
   open: boolean

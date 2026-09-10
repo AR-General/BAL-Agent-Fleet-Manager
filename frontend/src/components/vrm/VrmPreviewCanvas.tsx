@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { CompanionHost } from "@openclaw/character-kit";
+import { CompanionHost } from "@nexus/character-kit";
 
 type Props = {
   vrmUrl: string;

@@ -8,7 +8,7 @@ import {
   type CharacterActionEvent,
   type CompanionHost,
   type MoveInput,
-} from "@openclaw/character-kit";
+} from "@nexus/character-kit";
 import { useWasdMoveInput } from "./useWasdMoveInput";
 
 export type CompanionSceneControlState = {

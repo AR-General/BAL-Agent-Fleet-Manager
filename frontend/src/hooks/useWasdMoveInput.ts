@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { MoveInput } from "@openclaw/character-kit";
+import type { MoveInput } from "@nexus/character-kit";
 import { isTypingTarget, isWalkKey, normalizeWasdKey, stickFromHeldKeys } from "../lib/wasdMove";
 
 const IDLE: MoveInput = { x: 0, z: 0, yaw: 0, jump: false };

@@ -4,9 +4,9 @@ import {
   parseInlineTags,
   type InlineSequenceStep,
   type TimedInlineCue,
-} from "@openclaw/character-kit";
-import { StreamingPcmPlayer, resumeAudioContext } from "@openclaw/voice-kit/pcm-player";
-import { FishTts } from "@openclaw/voice-kit/tts-fish";
+} from "@nexus/character-kit";
+import { StreamingPcmPlayer, resumeAudioContext } from "@nexus/voice-kit/pcm-player";
+import { FishTts } from "@nexus/voice-kit/tts-fish";
 import { fetchFishTtsAlignedPcmStream, fetchFishTtsPcmStream } from "../lib/fishTts";
 import { cueTimeForIndex, type WordTimelineEntry } from "../lib/ttsCueTiming";
 import { hasSpeakableContent, sanitizeTtsText } from "../lib/ttsSanitize";

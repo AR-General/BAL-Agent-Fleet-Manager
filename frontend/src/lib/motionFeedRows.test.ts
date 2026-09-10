@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { CharacterActionEvent } from "@openclaw/character-kit";
+import type { CharacterActionEvent } from "@nexus/character-kit";
 import { flattenMotionFeedRows, groupMotionFeedEvents } from "./motionFeedRows.ts";
 
 function ev(

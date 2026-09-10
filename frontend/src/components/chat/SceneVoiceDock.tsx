@@ -3,9 +3,9 @@
  * STT toggle, TTS toggle, hold-to-talk, You/Bot meters.
  */
 import { useEffect, useRef, useState } from "react";
-import { resumeAudioContext } from "@openclaw/voice-kit/pcm-player";
-import { SpeachesStt } from "@openclaw/voice-kit/stt-speaches";
-import type { SttProvider, VadSession } from "@openclaw/voice-kit/types";
+import { resumeAudioContext } from "@nexus/voice-kit/pcm-player";
+import { SpeachesStt } from "@nexus/voice-kit/stt-speaches";
+import type { SttProvider, VadSession } from "@nexus/voice-kit/types";
 import { resolveFishVoiceId } from "../../lib/fishVoices";
 import {
   DEFAULT_TTS_SPEAK_MODE,
@@ -26,7 +26,7 @@ type Props = {
   sessionId?: string;
   fishApiKey?: string;
   voiceId?: string | null;
-  onPlayTimedSteps?: (steps: import("@openclaw/character-kit").InlineSequenceStep[]) => void;
+  onPlayTimedSteps?: (steps: import("@nexus/character-kit").InlineSequenceStep[]) => void;
   onTtsEnabledChange?: (enabled: boolean) => void;
   /** Live VRM expression names so [grin] etc. become timed face cues. */
   expressionNames?: string[];
@@ -227,7 +227,7 @@ export function SceneVoiceDock({
 
   async function ensureFallbackStt(): Promise<SttProvider> {
     if (!fallbackSttRef.current) {
-      const { BrowserWhisperStt } = await import("@openclaw/voice-kit/stt-browser-whisper");
+      const { BrowserWhisperStt } = await import("@nexus/voice-kit/stt-browser-whisper");
       fallbackSttRef.current = new BrowserWhisperStt({ model: "Xenova/whisper-base.en" });
     }
     return fallbackSttRef.current;
@@ -271,7 +271,7 @@ export function SceneVoiceDock({
     try {
       try {
         if (!vadRef.current) {
-          const { createSileroVadSession } = await import("@openclaw/voice-kit/vad-silero");
+          const { createSileroVadSession } = await import("@nexus/voice-kit/vad-silero");
           const vad = await createSileroVadSession({
             onSpeechStart: () => setStatus("speech"),
             onSpeechEnd: async (pcm) => {

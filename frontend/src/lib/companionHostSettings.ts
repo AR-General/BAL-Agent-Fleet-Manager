@@ -1,4 +1,4 @@
-import type { CompanionHost } from "@openclaw/character-kit";
+import type { CompanionHost } from "@nexus/character-kit";
 import { parseInteractionAckSettings } from "./interactionAckSettings";
 import { walkTrailOptionsFromSettings } from "./walkTrailSettings";
 

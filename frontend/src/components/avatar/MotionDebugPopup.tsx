@@ -5,7 +5,7 @@ import {
   formatActionSource,
   formatActionStatus,
   type CharacterActionEvent,
-} from "@openclaw/character-kit";
+} from "@nexus/character-kit";
 import { flattenMotionFeedRows, groupMotionFeedEvents } from "../../lib/motionFeedRows";
 
 type Props = {

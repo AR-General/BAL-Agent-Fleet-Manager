@@ -1,4 +1,4 @@
-import type { MoveInput } from "@openclaw/character-kit";
+import type { MoveInput } from "@nexus/character-kit";
 
 const WALK_KEYS = new Set([
   "w",

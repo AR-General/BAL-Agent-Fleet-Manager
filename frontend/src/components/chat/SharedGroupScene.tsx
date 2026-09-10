@@ -13,7 +13,7 @@ import {
   type ClothesOverlayPiece,
   type SceneOccupantPose,
   type SceneRoomOccupant,
-} from "@openclaw/character-kit";
+} from "@nexus/character-kit";
 import { useAgentStatusMotions } from "../../hooks/useAgentStatusMotions";
 import { useInlineTagPerformance } from "../../hooks/useInlineTagPerformance";
 import { parseStatusMotions, type AgentLiveStatus } from "../../lib/agentStatusGestures";

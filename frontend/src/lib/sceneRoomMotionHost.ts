@@ -1,7 +1,7 @@
 import type {
   CharacterActionSource,
   SceneRoomAvatarHandle,
-} from "@openclaw/character-kit";
+} from "@nexus/character-kit";
 
 /** CompanionHost-shaped adapter so shared-scene occupants reuse DM motion hooks. */
 export function sceneRoomMotionHost(handle: SceneRoomAvatarHandle) {

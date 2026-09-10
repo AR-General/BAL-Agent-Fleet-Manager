@@ -1,4 +1,4 @@
-import type { CharacterActionEvent } from "@openclaw/character-kit";
+import type { CharacterActionEvent } from "@nexus/character-kit";
 
 export type MotionFeedGroup = {
   key: string;
