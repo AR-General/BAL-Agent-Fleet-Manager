@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import type { AgentProfile } from "../types";
 import { PageHeader } from "../components/common/PageHeader";
@@ -8,6 +8,7 @@ import { useViewMode } from "../stores/viewMode";
 import { AuthenticatedImage, invalidateAuthenticatedImageCache } from "../components/common/AuthenticatedImage";
 import { fileToBase64 } from "../utils/fileBase64";
 import { AgentAvatarVoiceEditor } from "../components/agents/AgentAvatarVoiceEditor";
+import { ConnectAgentPanel } from "../components/agents/ConnectAgentPanel";
 import { classifyBotRuntime, RUNTIME_LABELS } from "../lib/botRuntime";
 
 type ImageMeta = { id: string; image_type: string; mime_type: string };
@@ -148,7 +149,21 @@ export function AgentDetailPage() {
         </button>
       </form>
 
-      {profile.instance_slug ? <AgentAvatarVoiceEditor slug={profile.instance_slug} /> : null}
+      {profile.instance_slug ? (
+        <>
+          <div style={{ marginTop: "1.25rem", maxWidth: 720 }}>
+            <ConnectAgentPanel instanceSlug={profile.instance_slug} />
+            <p className="muted">
+              Generate the secret key on{" "}
+              <Link to={`/instances/${profile.instance_slug}`}>
+                Instance {profile.instance_slug} → API tokens
+              </Link>
+              .
+            </p>
+          </div>
+          <AgentAvatarVoiceEditor slug={profile.instance_slug} />
+        </>
+      ) : null}
 
       <h2 style={{ marginTop: "2rem" }}>Images</h2>
       <p className="muted">

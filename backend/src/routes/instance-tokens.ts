@@ -85,7 +85,7 @@ router.post("/", requireJwt, requireRole("admin", "operator"), async (req, res) 
     token: raw,
     token_once: "Store this token now; it will not be shown again.",
     entry: row,
-    env_hint: `OP_CONTROLLER_API_KEY=${raw}`,
+    env_hint: `OC_CONTROLLER_API_KEY=${raw}`,
   });
 });
 

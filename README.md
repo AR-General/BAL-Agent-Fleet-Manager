@@ -12,6 +12,8 @@ OpenClaw, Hermes, and any OpenAI-compatible API remain supported for private / s
 
 This repo is a **small multi-agent 3D playground** (test harness for the kits). BIM/IFC sites, wiring, machine telemetry, and in-browser VR/AR are **not in scope here**; they are managed on [AssetsNexus.org](https://assetsnexus.org).
 
+**Connect an agent:** [CONNECT-AGENT.md](CONNECT-AGENT.md) (instance token + GitHub skill sync). Workspace skill: [`skills/oc-controller/`](skills/oc-controller/).
+
 ![Group chat with 3D VRM companions](docs/screenshots/01-group-chat-3d.png)
 
 ![Operator portal](docs/screenshots/02-operator-portal.png)
@@ -29,6 +31,8 @@ This repo is a **small multi-agent 3D playground** (test harness for the kits). 
 | [`backend/`](backend/) | Express + TypeScript API, Drizzle/PostgreSQL |
 | [`frontend/`](frontend/) | React + Vite admin / chat UI |
 | [`docs/`](docs/) | Operator notes (`CHAT_WORKBENCH.md`). Planning dirs are local-only. |
+| [`skills/`](skills/) | OpenClaw/Hermes fleet skill (`oc-controller`). Prefer GitHub sync. |
+| [`CONNECT-AGENT.md`](CONNECT-AGENT.md) | Quick connect + optional steps |
 
 ## Local dev
 

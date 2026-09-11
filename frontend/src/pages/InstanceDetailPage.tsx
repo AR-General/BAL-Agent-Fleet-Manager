@@ -16,6 +16,7 @@ import { UrlSchemeBadge } from "../components/instances/EndpointStack";
 import { HTTP_PLAINTEXT_WARNING } from "../lib/instanceEndpoints";
 import { instanceWriteBody, runtimeFormFromInstance, type RuntimeFormValue } from "../lib/instanceRuntimeForm";
 import { classifyBotRuntime, RUNTIME_LABELS } from "../lib/botRuntime";
+import { ConnectAgentPanel } from "../components/agents/ConnectAgentPanel";
 
 type TokenRow = {
   id: string;
@@ -411,7 +412,8 @@ export function InstanceDetailPage() {
 
       {tab === "tokens" && (
         <>
-          <form onSubmit={createToken} className="toolbar">
+          <ConnectAgentPanel instanceSlug={slug} />
+          <form onSubmit={createToken} className="toolbar" style={{ marginTop: "1rem" }}>
             <input
               value={tokenLabel}
               onChange={(e) => setTokenLabel(e.target.value)}
@@ -426,7 +428,10 @@ export function InstanceDetailPage() {
                 <strong>Copy now</strong> — shown once:
               </p>
               <pre className="code">{newToken}</pre>
-              <p className="muted">Set as OP_CONTROLLER_API_KEY on the instance.</p>
+              <p className="muted">
+                Set as <code>OC_CONTROLLER_API_KEY</code> on the <strong>agent host</strong> (secret env).
+                Do not commit or paste into public chat.
+              </p>
             </div>
           )}
           <table className="table">

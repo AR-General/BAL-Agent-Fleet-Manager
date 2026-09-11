@@ -44,6 +44,44 @@ button.secondary {
   color: var(--text);
   border: 1px solid var(--border);
 }
+.connect-agent-panel {
+  max-width: 720px;
+  margin-bottom: 1rem;
+}
+.connect-agent-panel:hover {
+  border-color: var(--border);
+}
+.connect-agent-steps {
+  margin: 0.75rem 0 1rem;
+  padding-left: 1.25rem;
+  line-height: 1.45;
+}
+.connect-agent-steps li + li {
+  margin-top: 0.85rem;
+}
+.connect-agent-pre {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+}
+.connect-agent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  align-items: center;
+}
+a.button-link {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+}
+a.button-link:hover {
+  text-decoration: none;
+  filter: brightness(1.08);
+}
 button.danger { background: #a33; }
 .layout { display: flex; min-height: 100vh; }
 .layout.layout-chat .sidebar,

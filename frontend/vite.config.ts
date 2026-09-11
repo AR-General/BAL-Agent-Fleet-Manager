@@ -15,38 +15,44 @@ const objectsKitSrc = path.join(devVrmRoot, "packages/objects-kit/src/index.ts")
 const robotsKitSrc = path.join(devVrmRoot, "packages/robots-kit/src/index.ts");
 const agentToolsKitSrc = path.join(devVrmRoot, "packages/agent-tools-kit/src/index.ts");
 const playgroundAssets = path.join(devVrmRoot, "apps/playground/public/assets");
+const skillsRoot = path.join(ocControllerRoot, "skills");
 
-function serveDevVrmAssets(): Plugin {
+function serveStaticTree(urlPrefix: string, rootDir: string, name: string): Plugin {
   return {
-    name: "dev-vrm-assets",
+    name,
     configureServer(server) {
-      server.middlewares.use("/dev-vrm-assets", (req, res, next) => {
+      server.middlewares.use(urlPrefix, (req, res, next) => {
         const rel = decodeURIComponent((req.url || "/").split("?")[0] || "/").replace(/^\//, "");
-        const file = path.normalize(path.join(playgroundAssets, rel));
-        if (!file.startsWith(playgroundAssets) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+        const file = path.normalize(path.join(rootDir, rel));
+        if (!file.startsWith(rootDir) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
           next();
           return;
         }
+        if (file.endsWith(".md")) res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+        else if (file.endsWith(".vrm")) res.setHeader("Content-Type", "model/gltf-binary");
         if (file.endsWith(".vrm") || file.endsWith(".vrma")) {
           res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
         } else {
           res.setHeader("Cache-Control", "public, max-age=3600");
         }
-        if (file.endsWith(".vrm")) res.setHeader("Content-Type", "model/gltf-binary");
         fs.createReadStream(file).pipe(res);
       });
     },
     closeBundle() {
-      if (!fs.existsSync(playgroundAssets)) return;
-      const dest = path.join(ocControllerRoot, "frontend/dist/dev-vrm-assets");
+      if (!fs.existsSync(rootDir)) return;
+      const dest = path.join(ocControllerRoot, "frontend/dist", urlPrefix.replace(/^\//, ""));
       fs.mkdirSync(dest, { recursive: true });
-      fs.cpSync(playgroundAssets, dest, { recursive: true });
+      fs.cpSync(rootDir, dest, { recursive: true });
     },
   };
 }
 
 export default defineConfig({
-  plugins: [react(), serveDevVrmAssets()],
+  plugins: [
+    react(),
+    serveStaticTree("/dev-vrm-assets", playgroundAssets, "dev-vrm-assets"),
+    serveStaticTree("/skills", skillsRoot, "oc-skills"),
+  ],
   // wlipsync (via three-vrm-lip-sync) uses top-level await; default Vite targets reject it.
   esbuild: {
     target: "esnext",
