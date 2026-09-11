@@ -3,6 +3,7 @@ import type { AuthUser } from "../middleware/auth.js";
 import { formatCharacterSpeakPrompt } from "./characterSpeakTool.js";
 import {
   formatViewportMotionPrompt,
+  type SceneEntityDigest,
   type SceneOccupantPose,
 } from "./sceneOccupancy.js";
 import type { TtsSpeakMode } from "./ttsSpeakMode.js";
@@ -82,6 +83,8 @@ export function buildChannelSystemPrompt(opts: {
   primarySlug?: string | null;
   replyPolicy?: string;
   sceneOccupants?: SceneOccupantPose[];
+  /** Compact object/robot digest from the client SceneHost (optional). */
+  sceneEntities?: SceneEntityDigest[];
   /** When "tool", instruct the agent to use character_speak instead of auto-TTS. */
   ttsSpeakMode?: TtsSpeakMode;
 }): string {
@@ -155,6 +158,7 @@ export function buildChannelSystemPrompt(opts: {
         selfSlug: opts.agentSlug,
         roster,
         occupants: opts.sceneOccupants || [],
+        entities: opts.sceneEntities || [],
       }),
     );
   }

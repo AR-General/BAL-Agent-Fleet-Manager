@@ -8,7 +8,21 @@ export type SceneOccupantPose = {
   present: boolean;
 };
 
+/** Compact scene graph row from the client (no full ObjectSpec). */
+export type SceneEntityDigest = {
+  id: string;
+  kind: string;
+  label: string;
+  x: number;
+  y: number;
+  z: number;
+  yaw: number;
+  present?: boolean;
+};
+
 const MAX_OCCUPANTS = 32;
+const MAX_ENTITIES = 32;
+const MAX_ENTITY_PROMPT_LINES = 12;
 
 export function normalizeOccupantPoses(raw: unknown): SceneOccupantPose[] {
   if (!Array.isArray(raw)) return [];
@@ -28,6 +42,34 @@ export function normalizeOccupantPoses(raw: unknown): SceneOccupantPose[] {
       x: Number.isFinite(x) ? x : 0,
       z: Number.isFinite(z) ? z : 0,
       facing: Number.isFinite(facing) ? facing : 0,
+      present: rec.present !== false,
+    });
+  }
+  return out;
+}
+
+export function normalizeEntityDigests(raw: unknown): SceneEntityDigest[] {
+  if (!Array.isArray(raw)) return [];
+  const out: SceneEntityDigest[] = [];
+  const seen = new Set<string>();
+  for (const row of raw.slice(0, MAX_ENTITIES)) {
+    if (!row || typeof row !== "object") continue;
+    const rec = row as Record<string, unknown>;
+    const id = String(rec.id || "").trim();
+    if (!id || seen.has(id.toLowerCase())) continue;
+    seen.add(id.toLowerCase());
+    const x = Number(rec.x);
+    const y = Number(rec.y);
+    const z = Number(rec.z);
+    const yaw = Number(rec.yaw);
+    out.push({
+      id,
+      kind: String(rec.kind || "object").trim() || "object",
+      label: String(rec.label || id).trim() || id,
+      x: Number.isFinite(x) ? x : 0,
+      y: Number.isFinite(y) ? y : 0,
+      z: Number.isFinite(z) ? z : 0,
+      yaw: Number.isFinite(yaw) ? yaw : 0,
       present: rec.present !== false,
     });
   }
@@ -67,14 +109,41 @@ export function mergeRosterIntoOccupants(
   });
 }
 
+function formatNearbyEntities(
+  selfSlug: string,
+  occupants: SceneOccupantPose[],
+  entities: SceneEntityDigest[],
+): string[] {
+  if (!entities.length) return [];
+  const self = occupants.find((o) => o.slug.toLowerCase() === selfSlug.trim().toLowerCase());
+  const from = { x: self?.x ?? 0, z: self?.z ?? 0 };
+  const scored = entities
+    .map((e) => {
+      const dx = e.x - from.x;
+      const dz = e.z - from.z;
+      return { ...e, dist: Math.sqrt(dx * dx + dz * dz) };
+    })
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, MAX_ENTITY_PROMPT_LINES);
+  const lines = ["Nearby scene props/robots (meters; spawn via object_spawn / robot_spawn):"];
+  for (const e of scored) {
+    lines.push(
+      `- ${e.id} [${e.kind}] "${e.label}" x=${e.x.toFixed(1)} z=${e.z.toFixed(1)} dist=${e.dist.toFixed(1)}m`,
+    );
+  }
+  return lines;
+}
+
 /**
  * Motion tags + live XZ list. Walk/approach stay tag-based; TTS uses the native
  * character_speak tool when speak-mode is tool.
+ * `entities` is optional — old clients omit it and prompts stay valid.
  */
 export function formatViewportMotionPrompt(opts: {
   selfSlug: string;
   roster: string[];
   occupants: SceneOccupantPose[];
+  entities?: SceneEntityDigest[];
 }): string {
   const self = opts.selfSlug.trim().toLowerCase();
   const occupants = mergeRosterIntoOccupants(opts.roster, opts.occupants);
@@ -97,14 +166,13 @@ export function formatViewportMotionPrompt(opts: {
       );
     }
     lines.push("Everyone listed here is in the room with you, including anyone who just joined. Do not claim they are absent.");
-    return lines.join("\n");
-  }
-
-  if (opts.roster.length) {
+  } else if (opts.roster.length) {
     lines.push(
       `These agents have avatars reserved in the shared 3D scene: ${opts.roster.map((s) => `@${s}`).join(", ")}.`,
       "Treat listed peers as visible. Use [approach:@slug] to walk to them.",
     );
   }
+
+  lines.push(...formatNearbyEntities(opts.selfSlug, occupants, opts.entities || []));
   return lines.join("\n");
 }

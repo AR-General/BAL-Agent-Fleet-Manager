@@ -1,11 +1,12 @@
 /** In-memory 3D viewport session flags — ephemeral, no DB round-trip. */
 
-import type { SceneOccupantPose } from "./sceneOccupancy.js";
+import type { SceneEntityDigest, SceneOccupantPose } from "./sceneOccupancy.js";
 
 type ViewportRow = {
   active: boolean;
   updatedAt: number;
   occupants: SceneOccupantPose[];
+  entities: SceneEntityDigest[];
 };
 
 const viewport3dSessions = new Map<string, ViewportRow>();
@@ -19,6 +20,10 @@ function prune(): void {
   }
 }
 
+function emptyRow(active: boolean): ViewportRow {
+  return { active, updatedAt: Date.now(), occupants: [], entities: [] };
+}
+
 export function setViewport3dActive(sessionId: string, active: boolean): void {
   prune();
   const prev = viewport3dSessions.get(sessionId);
@@ -28,6 +33,7 @@ export function setViewport3dActive(sessionId: string, active: boolean): void {
       active: false,
       updatedAt: Date.now(),
       occupants: prev.occupants,
+      entities: prev.entities,
     });
     return;
   }
@@ -35,6 +41,7 @@ export function setViewport3dActive(sessionId: string, active: boolean): void {
     active: true,
     updatedAt: Date.now(),
     occupants: prev?.occupants ?? [],
+    entities: prev?.entities ?? [],
   });
 }
 
@@ -46,6 +53,7 @@ export function setViewportOccupants(sessionId: string, occupants: SceneOccupant
       active: true,
       updatedAt: Date.now(),
       occupants,
+      entities: prev?.entities ?? [],
     });
     return;
   }
@@ -53,6 +61,17 @@ export function setViewportOccupants(sessionId: string, occupants: SceneOccupant
     ...prev,
     updatedAt: Date.now(),
     occupants,
+  });
+}
+
+export function setViewportEntities(sessionId: string, entities: SceneEntityDigest[]): void {
+  prune();
+  const prev = viewport3dSessions.get(sessionId) || emptyRow(true);
+  viewport3dSessions.set(sessionId, {
+    ...prev,
+    active: true,
+    updatedAt: Date.now(),
+    entities,
   });
 }
 
@@ -64,4 +83,9 @@ export function isViewport3dActive(sessionId: string): boolean {
 export function getViewportOccupants(sessionId: string): SceneOccupantPose[] {
   prune();
   return viewport3dSessions.get(sessionId)?.occupants ?? [];
+}
+
+export function getViewportEntities(sessionId: string): SceneEntityDigest[] {
+  prune();
+  return viewport3dSessions.get(sessionId)?.entities ?? [];
 }

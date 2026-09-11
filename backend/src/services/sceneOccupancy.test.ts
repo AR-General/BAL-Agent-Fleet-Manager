@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   formatViewportMotionPrompt,
   mergeRosterIntoOccupants,
+  normalizeEntityDigests,
   normalizeOccupantPoses,
   occupantPoseKey,
 } from "./sceneOccupancy.js";
@@ -18,6 +19,21 @@ describe("normalizeOccupantPoses", () => {
       { slug: "gamma", x: 1.25, z: -0.4, facing: 1.57, present: true },
       { slug: "alpha", x: 0, z: 0, facing: 0, present: false },
     ]);
+  });
+});
+
+describe("normalizeEntityDigests", () => {
+  it("caps and dedupes by id", () => {
+    const rows = normalizeEntityDigests([
+      { id: "a", kind: "object", label: "sphere", x: 1, z: 2 },
+      { id: "a", kind: "robot", label: "dup", x: 9, z: 9 },
+      { id: "b", kind: "robot", label: "bot", x: 0, y: 0.5, z: -1, yaw: 1.2 },
+    ]);
+    assert.equal(rows.length, 2);
+    assert.equal(rows[0]?.id, "a");
+    assert.equal(rows[0]?.kind, "object");
+    assert.equal(rows[1]?.yaw, 1.2);
+    assert.equal(rows[1]?.y, 0.5);
   });
 });
 
@@ -62,6 +78,28 @@ describe("formatViewportMotionPrompt", () => {
     assert.match(text, /@beta at x=0\.0/);
     assert.match(text, /just joined, pose pending/);
     assert.doesNotMatch(text, /Treat listed peers as visible/);
+  });
+
+  it("lists nearby props when entities digest is present", () => {
+    const text = formatViewportMotionPrompt({
+      selfSlug: "alpha",
+      roster: ["alpha"],
+      occupants: [{ slug: "alpha", x: 0, z: 0, facing: 0, present: true }],
+      entities: [
+        { id: "obj_1", kind: "object", label: "sphere", x: 1.2, y: 0, z: 0, yaw: 0 },
+      ],
+    });
+    assert.match(text, /Nearby scene props\/robots/);
+    assert.match(text, /obj_1 \[object\] "sphere"/);
+  });
+
+  it("stays valid when entities are omitted (old clients)", () => {
+    const text = formatViewportMotionPrompt({
+      selfSlug: "alpha",
+      roster: ["alpha"],
+      occupants: [{ slug: "alpha", x: 0, z: 0, facing: 0, present: true }],
+    });
+    assert.doesNotMatch(text, /Nearby scene props/);
   });
 });
 

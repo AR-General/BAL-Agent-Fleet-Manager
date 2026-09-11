@@ -10,6 +10,10 @@ const devVrmRoot = process.env.DEV_VRM_ROOT
   : fileURLToPath(new URL("../../dev-vrm", import.meta.url));
 const voiceKitSrc = path.join(devVrmRoot, "packages/voice-kit/src");
 const characterKitSrc = path.join(devVrmRoot, "packages/character-kit/src/index.ts");
+const sceneKitSrc = path.join(devVrmRoot, "packages/scene-kit/src/index.ts");
+const objectsKitSrc = path.join(devVrmRoot, "packages/objects-kit/src/index.ts");
+const robotsKitSrc = path.join(devVrmRoot, "packages/robots-kit/src/index.ts");
+const agentToolsKitSrc = path.join(devVrmRoot, "packages/agent-tools-kit/src/index.ts");
 const playgroundAssets = path.join(devVrmRoot, "apps/playground/public/assets");
 
 function serveDevVrmAssets(): Plugin {
@@ -59,6 +63,10 @@ export default defineConfig({
       // Directory alias so TTS can import pcm-player / tts-fish without evaluating Whisper.
       "@nexus/voice-kit": voiceKitSrc,
       "@nexus/character-kit": characterKitSrc,
+      "@nexus/scene-kit": sceneKitSrc,
+      "@nexus/objects-kit": objectsKitSrc,
+      "@nexus/robots-kit": robotsKitSrc,
+      "@nexus/agent-tools-kit": agentToolsKitSrc,
     },
   },
   server: {
@@ -74,8 +82,16 @@ export default defineConfig({
         "**/migration_docs/**",
         "**/packages/character-kit/tsconfig.json",
         "**/packages/voice-kit/tsconfig.json",
+        "**/packages/scene-kit/tsconfig.json",
+        "**/packages/objects-kit/tsconfig.json",
+        "**/packages/robots-kit/tsconfig.json",
+        "**/packages/agent-tools-kit/tsconfig.json",
         "**/packages/character-kit/dist/**",
         "**/packages/voice-kit/dist/**",
+        "**/packages/scene-kit/dist/**",
+        "**/packages/objects-kit/dist/**",
+        "**/packages/robots-kit/dist/**",
+        "**/packages/agent-tools-kit/dist/**",
       ],
     },
     warmup: {

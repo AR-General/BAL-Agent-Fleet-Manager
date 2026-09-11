@@ -47,6 +47,7 @@ import {
 } from "../avatar/AvatarConfigPanel";
 import { MotionDebugPopup } from "../avatar/MotionDebugPopup";
 import { GestureTestPopup } from "../avatar/GestureTestPopup";
+import { SceneDebugPopup } from "../avatar/SceneDebugPopup";
 import { CompanionViewportCell } from "./CompanionViewportCell";
 import { SharedGroupScene } from "./SharedGroupScene";
 import { SceneVoiceDock } from "./SceneVoiceDock";
@@ -54,6 +55,9 @@ import type { TtsQueueState, TtsSpeakSource } from "../../hooks/useStreamingTts"
 import { ViewportActionStack } from "./ViewportActionStack";
 import type { ViewportToolEvent } from "../../lib/toolActionToasts";
 import type { AgentPresence } from "../../lib/participantPresence";
+import type { SceneGraphHost } from "../../lib/sceneGraphHost";
+import { bridgeFromCompanion, createSceneGraphHost } from "../../lib/sceneGraphHost";
+import type { SceneEntityDigest } from "@nexus/scene-kit";
 
 type Props = {
   participantSlugs: string[];
@@ -160,6 +164,7 @@ const GESTURE_MANIFEST_URL = "/dev-vrm-assets/vrma/manifest.json";
 const LAYOUT_KEY = "oc-chat-scene-layout";
 const MOTION_DEBUG_KEY = "oc-chat-motion-debug";
 const MOTION_DEBUG_OPEN_KEY = "oc-chat-motion-debug-open";
+const SCENE_DEBUG_OPEN_KEY = "oc-chat-scene-debug-open";
 
 function readLocalFlag(key: string, fallback = false): boolean {
   try {
@@ -259,6 +264,8 @@ const ICONS = {
   split: "M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z",
   debug:
     "M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5s-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z",
+  scene:
+    "M12 2L2 7l10 5 10-5-10-5zm0 9.5L4.5 7.8v4.4L12 16.5l7.5-4.3V7.8L12 11.5zM4.5 14.2v2.5L12 21l7.5-4.3v-2.5L12 18.7 4.5 14.2z",
 };
 
 export function MultiAvatarViewport({
@@ -306,14 +313,23 @@ export function MultiAvatarViewport({
     startX: number;
     startY: number;
   } | null>(null);
+  const sceneDebugDragRef = useRef<{
+    ox: number;
+    oy: number;
+    startX: number;
+    startY: number;
+  } | null>(null);
   const avatarsRef = useRef<ViewportAvatar[]>([]);
   const splitHostsRef = useRef(new Map<string, CompanionHost>());
   const sharedRoomRef = useRef<SceneRoom | null>(null);
+  const sceneHostRef = useRef<SceneGraphHost | null>(null);
+  const toolSeenRef = useRef(new Map<string, string>());
   const ttsAuthorSlugRef = useRef(ttsAuthorSlug);
   const focusedSlugRef = useRef("");
   const layoutModeRef = useRef<"solo" | "split" | "shared">("solo");
   const lastLipSyncSlugRef = useRef("");
   const lastOccupantKeyRef = useRef("");
+  const lastEntityKeyRef = useRef("");
 
   const [presenceLoading, setPresenceLoading] = useState(false);
   const [companionLoading, setCompanionLoading] = useState(false);
@@ -359,6 +375,11 @@ export function MultiAvatarViewport({
   const [motionEvents, setMotionEvents] = useState<CharacterActionEvent[]>([]);
   const [gestureTestOpen, setGestureTestOpen] = useState(false);
   const [gestureTestPos, setGestureTestPos] = useState({ x: 500, y: 120 });
+  const [sceneDebugOpen, setSceneDebugOpen] = useState(() =>
+    readLocalFlag(SCENE_DEBUG_OPEN_KEY, false),
+  );
+  const [sceneDebugPos, setSceneDebugPos] = useState({ x: 48, y: 280 });
+  const [sceneHost, setSceneHost] = useState<SceneGraphHost | null>(null);
   const [splitHostGen, setSplitHostGen] = useState(0);
   const [sharedRoomGen, setSharedRoomGen] = useState(0);
   const [layout, setLayout] = useState<SceneLayout>(() => {
@@ -450,14 +471,30 @@ export function MultiAvatarViewport({
       const key = poses
         .map((o) => `${o.slug}:${o.present ? 1 : 0}:${o.x.toFixed(1)}:${o.z.toFixed(1)}:${o.facing.toFixed(1)}`)
         .join("|");
-      if (key === lastOccupantKeyRef.current) return;
+      let entities: SceneEntityDigest[] | undefined;
+      let entityKey = lastEntityKeyRef.current;
+      try {
+        const digest = sceneHostRef.current?.digest() || [];
+        entityKey = digest
+          .map((e) => `${e.id}:${e.kind}:${e.x.toFixed(1)}:${e.z.toFixed(1)}:${e.yaw.toFixed(1)}`)
+          .join("|");
+        if (entityKey !== lastEntityKeyRef.current) {
+          entities = digest;
+        }
+      } catch {
+        /* host optional */
+      }
+      if (key === lastOccupantKeyRef.current && entities === undefined) return;
       lastOccupantKeyRef.current = key;
+      if (entities !== undefined) lastEntityKeyRef.current = entityKey;
       if (layoutModeRef.current === "shared") {
         saveScenePoses(sessionId, poses);
       }
+      const body: Record<string, unknown> = { active: true, occupants: poses };
+      if (entities !== undefined) body.entities = entities;
       void api(`/chat/sessions/${sessionId}/viewport`, {
         method: "PUT",
-        body: JSON.stringify({ active: true, occupants: poses }),
+        body: JSON.stringify(body),
       }).catch((error) => {
         console.warn("Failed to sync scene occupants", error);
       });
@@ -465,8 +502,38 @@ export function MultiAvatarViewport({
     [sessionId],
   );
 
+  /** Periodic entity digest even when avatars are idle. */
+  useEffect(() => {
+    if (!sessionId || useSplit) return;
+    if (!useSharedRoom && layoutModeRef.current !== "solo") return;
+    const tick = () => {
+      const host = sceneHostRef.current;
+      if (!host) return;
+      try {
+        const digest = host.digest();
+        const entityKey = digest
+          .map((e) => `${e.id}:${e.kind}:${e.x.toFixed(1)}:${e.z.toFixed(1)}:${e.yaw.toFixed(1)}`)
+          .join("|");
+        if (entityKey === lastEntityKeyRef.current) return;
+        lastEntityKeyRef.current = entityKey;
+        void api(`/chat/sessions/${sessionId}/viewport`, {
+          method: "PUT",
+          body: JSON.stringify({ active: true, entities: digest }),
+        }).catch((error) => {
+          console.warn("Failed to sync scene entities", error);
+        });
+      } catch {
+        /* ignore */
+      }
+    };
+    const timer = window.setInterval(tick, 1500);
+    return () => window.clearInterval(timer);
+  }, [sessionId, useSharedRoom, useSplit, sharedRoomGen, hostReady]);
+
   useEffect(() => {
     lastOccupantKeyRef.current = "";
+    lastEntityKeyRef.current = "";
+    toolSeenRef.current.clear();
     if (!sessionId) {
       setSavedPoses([]);
       setPosesReady(false);
@@ -548,10 +615,12 @@ export function MultiAvatarViewport({
     }
     if (!canvasRef.current) return;
     loadedKeyRef.current = "";
+    const slug = focusedSlug || participantSlugs[0] || "";
     const host = new CompanionHost(canvasRef.current, {
       background: 0x12171c,
       orbitControls: true,
       pointerLook: true,
+      agentId: slug || undefined,
     });
     hostRef.current = host;
     setHostReady((v) => v + 1);
@@ -567,6 +636,70 @@ export function MultiAvatarViewport({
       loadedKeyRef.current = "";
     };
   }, [fullscreen, unpinned, useSplit, useSharedRoom]);
+
+  /** Solo DM: attach SceneGraphHost to CompanionHost Three scene. */
+  useEffect(() => {
+    if (useSplit || useSharedRoom || !sessionId || hostReady < 1) {
+      return;
+    }
+    const companion = hostRef.current;
+    if (!companion) return;
+    let cancelled = false;
+    let host: SceneGraphHost | null = null;
+    try {
+      host = createSceneGraphHost({
+        bridge: bridgeFromCompanion(companion, focusedSlug || participantSlugs[0]),
+        sessionId,
+      });
+    } catch (err) {
+      console.warn("[scene-host] solo create failed", err);
+      host = null;
+    }
+    if (cancelled) {
+      host?.dispose();
+      return;
+    }
+    sceneHostRef.current = host;
+    setSceneHost(host);
+
+    let raf = 0;
+    const loop = () => {
+      try {
+        sceneHostRef.current?.tick();
+      } catch {
+        /* ignore */
+      }
+      raf = window.requestAnimationFrame(loop);
+    };
+    raf = window.requestAnimationFrame(loop);
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0 || !sceneHostRef.current) return;
+      try {
+        const id = sceneHostRef.current.pick(e.clientX, e.clientY);
+        if (id) sceneHostRef.current.setSelected(id);
+      } catch {
+        /* ignore */
+      }
+    };
+    const canvas = companion.controller.renderer?.domElement;
+    canvas?.addEventListener("pointerdown", onPointerDown);
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(raf);
+      canvas?.removeEventListener("pointerdown", onPointerDown);
+      try {
+        host?.dispose();
+      } catch {
+        /* ignore */
+      }
+      if (sceneHostRef.current === host) {
+        sceneHostRef.current = null;
+        setSceneHost(null);
+      }
+    };
+  }, [hostReady, sessionId, useSplit, useSharedRoom, focusedSlug, participantSlugs]);
 
   const loadFocused = useCallback(async (avatar: ViewportAvatar, force = false) => {
     const host = hostRef.current;
@@ -779,6 +912,64 @@ export function MultiAvatarViewport({
       /* ignore */
     }
   }, [motionDebugOpen]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SCENE_DEBUG_OPEN_KEY, sceneDebugOpen ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [sceneDebugOpen]);
+
+  /** Feed tool_call / tool_progress into agent-tools viz (shared + solo). */
+  useEffect(() => {
+    const host = sceneHost;
+    if (!host || useSplit) return;
+    for (const ev of toolEvents) {
+      const tool = (ev.tool || ev.label || "").trim();
+      if (!tool) continue;
+      const id = ev.id || `${ev.authorSlug || ""}:${tool}`;
+      const statusRaw = (ev.status || "start").toLowerCase();
+      const status =
+        statusRaw === "done" || statusRaw === "end" || statusRaw === "ok"
+          ? "end"
+          : statusRaw === "progress" || statusRaw === "running"
+            ? "progress"
+            : "start";
+      const seen = toolSeenRef.current.get(id);
+      if (seen === status) continue;
+      const prev = seen;
+      toolSeenRef.current.set(id, status);
+      try {
+        if (status === "start" || !prev) {
+          host.handleToolEvent({
+            tool,
+            status: "start",
+            agent: ev.authorSlug || focusedSlug || participantSlugs[0],
+            toolCallId: id,
+          });
+        }
+        if (status === "progress") {
+          host.handleToolEvent({
+            tool,
+            status: "progress",
+            agent: ev.authorSlug || focusedSlug || participantSlugs[0],
+            toolCallId: id,
+          });
+        }
+        if (status === "end") {
+          host.handleToolEvent({
+            tool,
+            status: "end",
+            agent: ev.authorSlug || focusedSlug || participantSlugs[0],
+            toolCallId: id,
+          });
+        }
+      } catch (err) {
+        console.warn("[scene-host] tool event failed", err);
+      }
+    }
+  }, [toolEvents, sceneHost, useSplit, focusedSlug, participantSlugs]);
 
   useEffect(() => {
     if (!motionDebugOn) {
@@ -1072,11 +1263,18 @@ export function MultiAvatarViewport({
           y: Math.max(8, gestureTestDragRef.current.startY + (e.clientY - gestureTestDragRef.current.oy)),
         });
       }
+      if (sceneDebugDragRef.current) {
+        setSceneDebugPos({
+          x: Math.max(8, sceneDebugDragRef.current.startX + (e.clientX - sceneDebugDragRef.current.ox)),
+          y: Math.max(8, sceneDebugDragRef.current.startY + (e.clientY - sceneDebugDragRef.current.oy)),
+        });
+      }
     }
     function onUp() {
       configDragRef.current = null;
       motionDragRef.current = null;
       gestureTestDragRef.current = null;
+      sceneDebugDragRef.current = null;
     }
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -1189,6 +1387,15 @@ export function MultiAvatarViewport({
           >
             <SvgIcon d={ICONS.debug} />
           </IconBtn>
+          {useSharedRoom || (!useSplit && !isGroup) ? (
+            <IconBtn
+              title={sceneDebugOpen ? "Hide scene objects debug" : "Show scene objects debug"}
+              active={sceneDebugOpen}
+              onClick={() => setSceneDebugOpen((v) => !v)}
+            >
+              <SvgIcon d={ICONS.scene} />
+            </IconBtn>
+          ) : null}
         </div>
         {statusChip ? (
           <span className="badge warn chat-agent-status-chip">
@@ -1266,6 +1473,11 @@ export function MultiAvatarViewport({
             sharedRoomRef.current = room;
             setSharedRoomGen((v) => v + 1);
           }}
+          onSceneHostChange={(host) => {
+            sceneHostRef.current = host;
+            setSceneHost(host);
+            setSharedRoomGen((v) => v + 1);
+          }}
         />
       ) : (
         <div className="chat-avatar-scene-wrap">
@@ -1326,6 +1538,29 @@ export function MultiAvatarViewport({
                   oy: e.clientY,
                   startX: gestureTestPos.x,
                   startY: gestureTestPos.y,
+                };
+              }}
+            />,
+            document.body,
+          )
+        : null}
+
+      {useSharedRoom || (!useSplit && !isGroup)
+        ? createPortal(
+            <SceneDebugPopup
+              open={sceneDebugOpen}
+              host={sceneHost}
+              selectedAgentSlug={walkSlug || focusedSlug}
+              pos={sceneDebugPos}
+              onClose={() => setSceneDebugOpen(false)}
+              onDragHandlePointerDown={(e) => {
+                if ((e.target as HTMLElement).closest("button, input, select")) return;
+                e.preventDefault();
+                sceneDebugDragRef.current = {
+                  ox: e.clientX,
+                  oy: e.clientY,
+                  startX: sceneDebugPos.x,
+                  startY: sceneDebugPos.y,
                 };
               }}
             />,

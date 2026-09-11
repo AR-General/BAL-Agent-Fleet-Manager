@@ -9,8 +9,8 @@ import { RoomAccessError, assertRoomAccess } from "../services/roomAcl.js";
 import { roomCreate, roomJoin, roomList, roomPost, roomReadHistory } from "../services/roomsService.js";
 import { stopAgentGeneration, stopSessionGeneration } from "../services/chatOrchestrator.js";
 import { snapshotForClient } from "../services/sessionLiveState.js";
-import { isViewport3dActive, setViewport3dActive, setViewportOccupants, getViewportOccupants } from "../services/viewportSession.js";
-import { normalizeOccupantPoses } from "../services/sceneOccupancy.js";
+import { isViewport3dActive, setViewport3dActive, setViewportOccupants, getViewportOccupants, setViewportEntities, getViewportEntities } from "../services/viewportSession.js";
+import { normalizeOccupantPoses, normalizeEntityDigests } from "../services/sceneOccupancy.js";
 import { incMetric } from "../utils/metrics.js";
 import { clampMaxAgentAutoTurns } from "../services/chatReplyTargets.js";
 import { clampMaxToolCalls } from "../services/chatToolCalls.js";
@@ -322,6 +322,21 @@ router.put("/sessions/:id/viewport", requireJwt, async (req, res) => {
         )
         .max(32)
         .optional(),
+      entities: z
+        .array(
+          z.object({
+            id: z.string().min(1),
+            kind: z.string().min(1),
+            label: z.string(),
+            x: z.number(),
+            y: z.number().optional(),
+            z: z.number(),
+            yaw: z.number().optional(),
+            present: z.boolean().optional(),
+          }),
+        )
+        .max(32)
+        .optional(),
     })
     .safeParse(req.body);
   if (!parsed.success) {
@@ -345,6 +360,11 @@ router.put("/sessions/:id/viewport", requireJwt, async (req, res) => {
     setViewportOccupants(id, occupants);
     incMetric("oc_scene_occupants_updates_total", "3D occupant snapshots posted for Hermes");
   }
+  if (parsed.data.active && parsed.data.entities) {
+    const entities = normalizeEntityDigests(parsed.data.entities);
+    setViewportEntities(id, entities);
+    incMetric("oc_scene_entities_updates_total", "3D scene entity digests posted for Hermes");
+  }
   res.json({ ok: true, active: isViewport3dActive(id) });
 });
 
@@ -364,6 +384,7 @@ router.get("/sessions/:id/viewport", requireJwt, async (req, res) => {
   res.json({
     active: isViewport3dActive(id),
     occupants: getViewportOccupants(id),
+    entities: getViewportEntities(id),
   });
 });
 

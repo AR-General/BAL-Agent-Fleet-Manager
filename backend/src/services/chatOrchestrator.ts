@@ -32,7 +32,7 @@ import {
 import { log } from "../utils/logger.js";
 import { parseInstanceTls } from "../utils/instanceTls.js";
 import { resolveApiBaseCandidates } from "../utils/instanceEndpoints.js";
-import { isViewport3dActive, getViewportOccupants } from "./viewportSession.js";
+import { isViewport3dActive, getViewportOccupants, getViewportEntities } from "./viewportSession.js";
 import { mergeRosterIntoOccupants } from "./sceneOccupancy.js";
 import {
   applySessionEvent,
@@ -455,6 +455,7 @@ async function generateOneAgent(opts: {
       ctx.participantSlugs,
       getViewportOccupants(chain.sessionId),
     ),
+    sceneEntities: getViewportEntities(chain.sessionId),
     ttsSpeakMode,
   });
   const messages: HermesMessage[] = [

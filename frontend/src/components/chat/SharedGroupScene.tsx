@@ -20,6 +20,7 @@ import { parseStatusMotions, type AgentLiveStatus } from "../../lib/agentStatusG
 import { applyLocoSettings } from "../../lib/companionHostSettings";
 import { buildGroupOccupants, mergeOccupantPoses, resolveGroupSpeakerSlug } from "../../lib/groupSceneOccupants";
 import type { AgentPresence } from "../../lib/participantPresence";
+import { createSceneGraphHost, bridgeFromSceneRoom, type SceneGraphHost } from "../../lib/sceneGraphHost";
 import { sceneRoomMotionHost } from "../../lib/sceneRoomMotionHost";
 import { CLOTHES_OVERLAY_CATALOG, VRM_CATALOG } from "../../lib/vrmCatalog";
 import type { AvatarClothesState } from "../avatar/AvatarConfigPanel";
@@ -42,6 +43,7 @@ type Props = {
   onSelectSlug: (slug: string) => void;
   onRoomChange?: (room: SceneRoom | null) => void;
   onOccupantsChange?: (poses: SceneOccupantPose[]) => void;
+  onSceneHostChange?: (host: SceneGraphHost | null) => void;
   ttsAuthorSlug?: string;
   speakingSlug?: string | null;
   performanceKey?: string | null;
@@ -150,6 +152,7 @@ export function SharedGroupScene({
   onSelectSlug,
   onRoomChange,
   onOccupantsChange,
+  onSceneHostChange,
   ttsAuthorSlug,
   speakingSlug = null,
   performanceKey,
@@ -161,8 +164,10 @@ export function SharedGroupScene({
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const roomRef = useRef<SceneRoom | null>(null);
+  const sceneHostRef = useRef<SceneGraphHost | null>(null);
   const selectRef = useRef(onSelectSlug);
   const roomChangeRef = useRef(onRoomChange);
+  const sceneHostChangeRef = useRef(onSceneHostChange);
   const loadGenRef = useRef(0);
   const avatarsRef = useRef(avatars);
   const livePosesRef = useRef<SceneOccupantPose[]>([]);
@@ -171,6 +176,7 @@ export function SharedGroupScene({
   const [error, setError] = useState("");
   selectRef.current = onSelectSlug;
   roomChangeRef.current = onRoomChange;
+  sceneHostChangeRef.current = onSceneHostChange;
   avatarsRef.current = avatars;
 
   useEffect(() => {
@@ -192,11 +198,87 @@ export function SharedGroupScene({
     setReady((v) => v + 1);
     return () => {
       loadGenRef.current += 1;
+      try {
+        sceneHostRef.current?.dispose();
+      } catch {
+        /* ignore */
+      }
+      sceneHostRef.current = null;
+      sceneHostChangeRef.current?.(null);
       roomChangeRef.current?.(null);
       room.dispose();
       roomRef.current = null;
     };
   }, []);
+
+  /** Scene graph host: objects/robots; fail-soft so avatars still render. */
+  useEffect(() => {
+    const room = roomRef.current;
+    if (!room || ready < 1 || !sessionId) {
+      if (sceneHostRef.current) {
+        try {
+          sceneHostRef.current.dispose();
+        } catch {
+          /* ignore */
+        }
+        sceneHostRef.current = null;
+        sceneHostChangeRef.current?.(null);
+      }
+      return;
+    }
+    let cancelled = false;
+    let host: SceneGraphHost | null = null;
+    try {
+      host = createSceneGraphHost({ bridge: bridgeFromSceneRoom(room), sessionId });
+    } catch (err) {
+      console.warn("[scene-host] create failed; continuing with avatars only", err);
+      host = null;
+    }
+    if (cancelled) {
+      host?.dispose();
+      return;
+    }
+    sceneHostRef.current = host;
+    sceneHostChangeRef.current?.(host);
+
+    let raf = 0;
+    const loop = () => {
+      try {
+        sceneHostRef.current?.tick();
+      } catch {
+        /* ignore tick errors */
+      }
+      raf = window.requestAnimationFrame(loop);
+    };
+    raf = window.requestAnimationFrame(loop);
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0 || !sceneHostRef.current) return;
+      try {
+        const id = sceneHostRef.current.pick(e.clientX, e.clientY);
+        if (id) sceneHostRef.current.setSelected(id);
+      } catch {
+        /* ignore */
+      }
+    };
+    const canvas = room.renderer.domElement;
+    canvas.addEventListener("pointerdown", onPointerDown);
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(raf);
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      try {
+        host?.dispose();
+      } catch {
+        /* ignore */
+      }
+      if (sceneHostRef.current === host) {
+        sceneHostRef.current = null;
+        sceneHostChangeRef.current?.(null);
+      }
+    };
+  }, [ready, sessionId]);
 
   const occupants = useMemo(
     (): SceneRoomOccupant[] => buildGroupOccupants(slugs, avatars, presenceBySlug, savedPoses),

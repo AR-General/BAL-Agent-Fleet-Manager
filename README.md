@@ -1,14 +1,14 @@
-# oc-controller
+# BAL Agent Fleet Manager (`oc-controller`)
 
 A **small cockpit** to privately manage your own agent fleet and their channels: register runtimes, stream group chat, and drive 3D VRM companions.
 
-License: **[MIT](LICENSE)**.
+Repo: [github.com/AR-General/BAL-Agent-Fleet-Manager](https://github.com/AR-General/BAL-Agent-Fleet-Manager) · License: **[MIT](LICENSE)**.
 
 This cockpit was built to coordinate agents while [AssetsNexus.org](https://assetsnexus.org) was under development. **Native [Nexus Agents](https://assetsnexus.org) have replaced it for that work.** For professional use, switch to Nexus Agents: context and brain management, data privacy, agent RBAC, 2000+ physical-world skills, MCP, and more. You can still **connect Nexus Agents here** the same way as OpenClaw or Hermes (OpenAI-compatible `api_base`).
 
 OpenClaw, Hermes, and any OpenAI-compatible API remain supported for private / self-hosted fleets.
 
-3D motion and voice: free **`@nexus/character-kit` / `@nexus/voice-kit`** (MIT), typically checked out as a sibling `../dev-vrm`. This repo is an **integration example**; [AssetsNexus.org](https://assetsnexus.org) is a **utilizing platform**.
+3D motion and voice: free **`@nexus/character-kit` / `@nexus/voice-kit`** (and scene kits) from **[nexus-collaboration-vr](https://github.com/assetsnexus/nexus-collaboration-vr)** (MIT). Clone that repo as a sibling `../dev-vrm` (or set `DEV_VRM_ROOT`). This fleet manager is an **integration example**; [AssetsNexus.org](https://assetsnexus.org) is a **utilizing platform**.
 
 This repo is a **small multi-agent 3D playground** (test harness for the kits). BIM/IFC sites, wiring, machine telemetry, and in-browser VR/AR are **not in scope here**; they are managed on [AssetsNexus.org](https://assetsnexus.org).
 
@@ -17,6 +17,10 @@ This repo is a **small multi-agent 3D playground** (test harness for the kits). 
 ![Operator portal](docs/screenshots/02-operator-portal.png)
 
 ![Instance channel matrix](docs/screenshots/03-channel-matrix.png)
+
+![DM companion with scene graph objects](docs/screenshots/04-scene-objects-dm.png)
+
+![Desk and floor tool-call sphere](docs/screenshots/05-desk-tool-sphere.png)
 
 ## Layout
 
@@ -69,11 +73,16 @@ Portal: **VRMs** (`/vrms`) — scan, upload, rename, 3D preview. Assign on **Age
 
 Model catalogs: [VRoid Hub](https://hub.vroid.com/), [VRoid Studio](https://vroid.com/en/studio), [vrm.dev](https://vrm.dev/en/), [three-vrm sample](https://github.com/pixiv/three-vrm), [Ready Player Me](https://readyplayer.me/), [BOOTH](https://booth.pm/). Read each VRM license.
 
-The frontend `file:` deps and Vite aliases expect **`@nexus/character-kit`** at `../dev-vrm` (sibling of this repo, or `services/dev-vrm` in the monorepo). Override with `DEV_VRM_ROOT` if needed.
+The frontend `file:` deps and Vite aliases expect the kits checkout at `../dev-vrm` (clone [nexus-collaboration-vr](https://github.com/assetsnexus/nexus-collaboration-vr) and name the folder `dev-vrm`, or keep another path and set `DEV_VRM_ROOT`).
+
+```bash
+# sibling of this repo:
+git clone git@github.com:assetsnexus/nexus-collaboration-vr.git ../dev-vrm
+```
 
 ## Docker
 
-Frontend Docker build context is the **parent of this repo** (so `dev-vrm` and `oc-controller` are siblings):
+Frontend Docker build context is the **parent of this repo** (so `dev-vrm` / kits and this fleet manager are siblings):
 
 ```bash
 ./scripts/docker-build-push.sh

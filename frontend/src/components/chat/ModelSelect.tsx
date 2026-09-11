@@ -10,7 +10,13 @@ import {
   type EnrichedLlmOption,
   type LlmMetaRow,
 } from "../../lib/llmModelMeta";
-import { llmOptionLabel, type LlmModelOption } from "../../lib/llmModels";
+import type { LlmModelOption } from "../../lib/llmModels";
+import {
+  modelDisplayName,
+  readRecentModelIds,
+  rememberModelUsage,
+  resolveModelProvider,
+} from "../../lib/llmModelProvider";
 
 type Props = {
   models: LlmModelOption[];
@@ -57,7 +63,8 @@ export function ModelSelect({
   const [metaRows, setMetaRows] = useState<LlmMetaRow[]>(metaCache?.rows || []);
   const [attribution, setAttribution] = useState(metaCache?.attribution?.intelligence || "");
   const [query, setQuery] = useState("");
-  const [menuPos, setMenuPos] = useState({ left: 0, top: 0, width: 420 });
+  const [menuPos, setMenuPos] = useState({ left: 0, top: 0, width: 520 });
+  const [recentIds, setRecentIds] = useState<string[]>(() => readRecentModelIds());
 
   useEffect(() => {
     let cancelled = false;
@@ -80,11 +87,26 @@ export function ModelSelect({
     [models, metaRows],
   );
 
+  const byId = useMemo(() => {
+    const map = new Map<string, EnrichedLlmOption>();
+    for (const m of enriched) map.set(m.id, m);
+    return map;
+  }, [enriched]);
+
+  const recent = useMemo(() => {
+    const out: EnrichedLlmOption[] = [];
+    for (const id of recentIds) {
+      const hit = byId.get(id);
+      if (hit) out.push(hit);
+    }
+    return out.slice(0, 5);
+  }, [recentIds, byId]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return enriched;
     return enriched.filter((m) => {
-      const hay = `${m.id} ${m.label || ""} ${m.owned_by || ""}`.toLowerCase();
+      const hay = `${m.id} ${m.label || ""} ${m.owned_by || ""} ${modelDisplayName(m.id)}`.toLowerCase();
       return hay.includes(q);
     });
   }, [enriched, query]);
@@ -95,11 +117,11 @@ export function ModelSelect({
     const el = rootRef.current;
     if (!el) return;
     const box = el.getBoundingClientRect();
-    const width = Math.min(520, Math.max(360, box.width));
+    const width = Math.min(560, Math.max(420, box.width + 80));
     let left = box.right - width;
     left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
     let top = box.bottom + 4;
-    const maxH = 360;
+    const maxH = 420;
     if (top + maxH > window.innerHeight - 8) {
       top = Math.max(8, box.top - maxH - 4);
     }
@@ -130,18 +152,26 @@ export function ModelSelect({
   }, [open, placeMenu]);
 
   function select(id: string) {
+    setRecentIds(rememberModelUsage(id));
     onChange(id);
     setOpen(false);
     setQuery("");
   }
 
-  const triggerLabel = loading
+  const triggerName = loading
     ? "Loading…"
     : !models.length
       ? emptyLabel
       : selected
-        ? llmOptionLabel(selected)
-        : value || "Select model";
+        ? modelDisplayName(selected.id)
+        : value
+          ? modelDisplayName(value)
+          : "Select model";
+  const triggerProvider = selected
+    ? resolveModelProvider(selected.id)
+    : value
+      ? resolveModelProvider(value)
+      : null;
 
   return (
     <div className={`chat-model-picker ${className || ""}`} ref={rootRef}>
@@ -151,12 +181,14 @@ export function ModelSelect({
         disabled={disabled || loading || !models.length}
         aria-haspopup="listbox"
         aria-expanded={open}
+        title={selected?.id || value || undefined}
         onClick={() => {
           if (disabled || loading || !models.length) return;
           setOpen((v) => !v);
         }}
       >
-        <span className="chat-model-picker-trigger-label">{triggerLabel}</span>
+        {triggerProvider ? <ProviderIcon provider={triggerProvider} /> : null}
+        <span className="chat-model-picker-trigger-label">{triggerName}</span>
         {selected ? (
           <span className="chat-model-picker-trigger-meta" aria-hidden="true">
             <span className={`chat-model-price in ${priceTone(selected.input_per_m)}`}>
@@ -192,8 +224,21 @@ export function ModelSelect({
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </div>
+              {recent.length && !query.trim() ? (
+                <div className="chat-model-picker-recent">
+                  <div className="chat-model-picker-section-label">Recent</div>
+                  {recent.map((m) => (
+                    <ModelRow
+                      key={`recent-${m.id}`}
+                      model={m}
+                      active={m.id === value}
+                      onSelect={() => select(m.id)}
+                    />
+                  ))}
+                </div>
+              ) : null}
               <div className="chat-model-picker-head" aria-hidden="true">
-                <span>Model</span>
+                <span className="chat-model-picker-head-model">Model</span>
                 <span title="USD per 1M input tokens">In $/M</span>
                 <span title="USD per 1M output tokens">Out $/M</span>
                 <span title="Artificial Analysis Intelligence Index">IQ</span>
@@ -225,6 +270,39 @@ export function ModelSelect({
   );
 }
 
+function ProviderIcon({ provider }: { provider: ReturnType<typeof resolveModelProvider> }) {
+  const [broken, setBroken] = useState(false);
+  const tip = provider.prefix
+    ? `${provider.label} (${provider.prefix}/)`
+    : provider.label;
+  if (provider.iconUrl && !broken) {
+    return (
+      <img
+        className="chat-model-provider-icon"
+        src={provider.iconUrl}
+        alt=""
+        title={tip}
+        width={16}
+        height={16}
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={() => setBroken(true)}
+      />
+    );
+  }
+  const letter = (provider.prefix || "?").slice(0, 1).toUpperCase();
+  return (
+    <span
+      className="chat-model-provider-badge"
+      title={tip}
+      style={{ background: provider.color }}
+      aria-hidden="true"
+    >
+      {letter}
+    </span>
+  );
+}
+
 function ModelRow({
   model,
   active,
@@ -234,16 +312,20 @@ function ModelRow({
   active: boolean;
   onSelect: () => void;
 }) {
+  const provider = resolveModelProvider(model.id);
+  const name = modelDisplayName(model.id);
   return (
     <button
       type="button"
       role="option"
       aria-selected={active}
       className={`chat-model-picker-row ${active ? "active" : ""}`}
+      title={model.id}
       onClick={onSelect}
     >
       <span className="chat-model-picker-name">
-        <strong>{llmOptionLabel(model)}</strong>
+        <ProviderIcon provider={provider} />
+        <strong>{name}</strong>
       </span>
       <span className={`chat-model-price in ${priceTone(model.input_per_m)}`}>
         {formatUsdPerM(model.input_per_m)}
