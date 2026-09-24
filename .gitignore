@@ -29,3 +29,4 @@ frontend/dist/
 # Internal planning (files stay locally)
 docs/followups/
 docs/plans/
+DEPLOYMENT.md

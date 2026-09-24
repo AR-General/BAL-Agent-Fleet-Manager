@@ -1,14 +1,19 @@
-# Frontend image. Build from services/ (character-kit, voice-kit, playground assets):
+# Frontend image. Build from services/ (all @nexus kits + playground assets):
 #   docker build -f services/oc-controller/frontend/Dockerfile -t oc-controller-frontend:latest services
 FROM node:22-bookworm-slim AS build
 WORKDIR /src
 
 COPY oc-controller/frontend/package.json oc-controller/frontend/package-lock.json /src/oc-controller/frontend/
+COPY oc-controller/skills /src/oc-controller/skills
 COPY dev-vrm/tsconfig.base.json /src/dev-vrm/tsconfig.base.json
 COPY dev-vrm/packages/character-kit /src/dev-vrm/packages/character-kit
 COPY dev-vrm/packages/voice-kit /src/dev-vrm/packages/voice-kit
+COPY dev-vrm/packages/scene-kit /src/dev-vrm/packages/scene-kit
+COPY dev-vrm/packages/objects-kit /src/dev-vrm/packages/objects-kit
+COPY dev-vrm/packages/robots-kit /src/dev-vrm/packages/robots-kit
+COPY dev-vrm/packages/agent-tools-kit /src/dev-vrm/packages/agent-tools-kit
 
-# Vite aliases kits to source; their imports resolve from each package's node_modules.
+# Vite aliases kits to source; character/voice need their own node_modules for package deps.
 WORKDIR /src/dev-vrm/packages/character-kit
 RUN npm install
 WORKDIR /src/dev-vrm/packages/voice-kit

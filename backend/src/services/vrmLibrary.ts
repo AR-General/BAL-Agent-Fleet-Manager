@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import type { Dirent } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { and, eq } from "drizzle-orm";
@@ -68,8 +69,9 @@ async function ensureDir(dir: string): Promise<void> {
 async function walkVrmFiles(root: string, relDir: string, depth: number): Promise<string[]> {
   if (depth > MAX_SCAN_DEPTH) return [];
   const abs = relDir ? resolveContainedPath(root, relDir) : absDir(root);
-  let entries: Awaited<ReturnType<typeof fs.readdir>>;
+  let entries: Dirent[];
   try {
+    // Explicit Dirent[] — Awaited<ReturnType<typeof fs.readdir>> picks a Buffer overload on Node 22 typings.
     entries = await fs.readdir(abs, { withFileTypes: true });
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;

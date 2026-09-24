@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client";
 import { filterLlmCatalog, type LlmModelOption } from "../../lib/llmModels";
+import { usePortalMode } from "../../stores/portalMode";
 import { ModelSelect } from "./ModelSelect";
+import { SessionAvatarBadge, type ProfilePreviews } from "./SessionAvatarBadge";
 import type { DbInstance } from "../../types";
 import type { Session } from "./types";
 
@@ -111,6 +113,7 @@ function SessionList({
   selectedSessionId,
   emptyMessage,
   actionLabel,
+  previews,
   onSelectSession,
   onAction,
 }: {
@@ -118,6 +121,7 @@ function SessionList({
   selectedSessionId?: string;
   emptyMessage: string;
   actionLabel: string;
+  previews: ProfilePreviews;
   onSelectSession: (session: Session) => void;
   onAction: (session: Session) => Promise<void>;
 }) {
@@ -140,14 +144,17 @@ function SessionList({
             className="chat-sidebar-item-main"
             onClick={() => onSelectSession(session)}
           >
-            <div className="chat-sidebar-item-title-row">
-              <strong className="chat-sidebar-item-title">{sectionTitle(session)}</strong>
-              {session.pinned ? <span className="chat-sidebar-pin" title="Pinned">◆</span> : null}
-            </div>
-            <div className="chat-sidebar-item-meta muted">
-              <span>{session.sessionType}</span>
-              <span aria-hidden="true">·</span>
-              <span>{formatTimestamp(session.updatedAt)}</span>
+            <SessionAvatarBadge session={session} previews={previews} size={36} />
+            <div className="chat-sidebar-item-body">
+              <div className="chat-sidebar-item-title-row">
+                <strong className="chat-sidebar-item-title">{sectionTitle(session)}</strong>
+                {session.pinned ? <span className="chat-sidebar-pin" title="Pinned">◆</span> : null}
+              </div>
+              <div className="chat-sidebar-item-meta muted">
+                <span>{session.sessionType}</span>
+                <span aria-hidden="true">·</span>
+                <span>{formatTimestamp(session.updatedAt)}</span>
+              </div>
             </div>
           </button>
           <button
@@ -187,6 +194,7 @@ export function SessionSidebar({
   onToggleArchived,
   onToggleHideDefaultAutoRooms,
 }: Props) {
+  const portalMode = usePortalMode((s) => s.mode);
   const [createMode, setCreateMode] = useState<CreateMode>(null);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -197,6 +205,7 @@ export function SessionSidebar({
   const [directParticipant, setDirectParticipant] = useState("");
   const [groupParticipants, setGroupParticipants] = useState<string[]>([]);
   const [createError, setCreateError] = useState("");
+  const [profilePreviews, setProfilePreviews] = useState<ProfilePreviews>({});
 
   const activeConversations = useMemo(
     () => activeSessions.filter((session) => !["named_channel", "event_mention"].includes(session.origin)),
@@ -217,6 +226,22 @@ export function SessionSidebar({
       : createMode === "group" || createMode === "channel"
         ? groupParticipants[0] || ""
         : "";
+
+  useEffect(() => {
+    let cancelled = false;
+    const visibility = portalMode === "demo" ? "public" : "internal";
+    void api<{ previews: ProfilePreviews }>(`/instances/profile-previews?visibility=${visibility}`)
+      .then((payload) => {
+        if (!cancelled) setProfilePreviews(payload.previews || {});
+      })
+      .catch((error) => {
+        console.error("Failed to load profile previews for chat sidebar", error);
+        if (!cancelled) setProfilePreviews({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [instances, portalMode]);
 
   useEffect(() => {
     if (!primaryAgentSlug) {
@@ -344,13 +369,6 @@ export function SessionSidebar({
     return all.slice(0, 18);
   }, [activeConversations, channelSessions, autoRooms]);
 
-  function sessionInitial(session: Session): string {
-    const label = sectionTitle(session);
-    const slug = session.participantInstanceSlugs[0];
-    if (slug) return slug.slice(0, 2).toUpperCase();
-    return label.slice(0, 2).toUpperCase();
-  }
-
   if (collapsed) {
     return (
       <aside className="chat-sidebar chat-sidebar-collapsed">
@@ -379,7 +397,7 @@ export function SessionSidebar({
                 title={sectionTitle(session)}
                 onClick={() => onSelectSession(session)}
               >
-                <span className="chat-rail-letter">{sessionInitial(session)}</span>
+                <SessionAvatarBadge session={session} previews={profilePreviews} size={28} />
                 {pulse?.unread ? <span className="chat-rail-unread">{pulse.unread > 9 ? "9+" : pulse.unread}</span> : null}
                 {busy ? (
                   <span className="chat-rail-think" title={pulse?.state || "thinking"}>
@@ -553,6 +571,7 @@ export function SessionSidebar({
             selectedSessionId={selectedSessionId}
             emptyMessage="No active direct or group conversations."
             actionLabel="Archive"
+            previews={profilePreviews}
             onSelectSession={onSelectSession}
             onAction={onArchiveSession}
           />
@@ -568,6 +587,7 @@ export function SessionSidebar({
             selectedSessionId={selectedSessionId}
             emptyMessage="No named channels yet."
             actionLabel="Archive"
+            previews={profilePreviews}
             onSelectSession={onSelectSession}
             onAction={onArchiveSession}
           />
@@ -590,6 +610,7 @@ export function SessionSidebar({
             selectedSessionId={selectedSessionId}
             emptyMessage="No auto-created event rooms."
             actionLabel="Archive"
+            previews={profilePreviews}
             onSelectSession={onSelectSession}
             onAction={onArchiveSession}
           />
@@ -606,6 +627,7 @@ export function SessionSidebar({
               selectedSessionId={selectedSessionId}
               emptyMessage="No archived sessions."
               actionLabel="Resume"
+              previews={profilePreviews}
               onSelectSession={onSelectSession}
               onAction={onResumeSession}
             />

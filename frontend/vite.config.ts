@@ -5,6 +5,8 @@ import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
 const ocControllerRoot = fileURLToPath(new URL("..", import.meta.url));
+const frontendRoot = fileURLToPath(new URL(".", import.meta.url));
+const threePkg = path.join(frontendRoot, "node_modules/three");
 const devVrmRoot = process.env.DEV_VRM_ROOT
   ? path.resolve(process.env.DEV_VRM_ROOT)
   : fileURLToPath(new URL("../../dev-vrm", import.meta.url));
@@ -65,7 +67,10 @@ export default defineConfig({
     },
   },
   resolve: {
+    // Kits live outside frontend/; peer `three` must resolve to this app's install.
+    dedupe: ["three"],
     alias: {
+      three: threePkg,
       // Directory alias so TTS can import pcm-player / tts-fish without evaluating Whisper.
       "@nexus/voice-kit": voiceKitSrc,
       "@nexus/character-kit": characterKitSrc,

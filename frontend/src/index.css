@@ -736,6 +736,9 @@ body.chat-resizing {
 }
 .chat-rail-icon {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 2.35rem;
   height: 2.35rem;
   padding: 0;
@@ -747,6 +750,10 @@ body.chat-resizing {
 .chat-rail-icon.selected {
   border-color: var(--accent);
   background: rgba(59, 110, 168, 0.28);
+}
+.chat-rail-icon .chat-session-avatars {
+  border: none;
+  background: transparent;
 }
 .chat-rail-letter {
   font-size: 0.72rem;
@@ -1186,6 +1193,9 @@ button.chat-sidebar-create-btn {
 }
 .chat-sidebar-item-main {
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   background: rgba(0, 0, 0, 0.18);
   border: 1px solid transparent;
   color: var(--text);
@@ -1193,6 +1203,56 @@ button.chat-sidebar-create-btn {
   padding: 0.55rem 1.85rem 0.55rem 0.65rem;
   border-radius: 9px;
   transition: background 0.12s ease, border-color 0.12s ease;
+}
+.chat-sidebar-item-body {
+  min-width: 0;
+  flex: 1;
+}
+.chat-session-avatars {
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+}
+.chat-session-avatars-empty {
+  background: linear-gradient(135deg, var(--border), rgba(0, 0, 0, 0.25));
+}
+.chat-session-avatars-single {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chat-session-avatars-single .inst-avatar {
+  border: none;
+  border-radius: 7px;
+}
+.chat-session-avatars-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.chat-session-avatars-grid .inst-avatar {
+  border: none;
+  border-radius: 0;
+  width: 100%;
+  height: 100%;
+}
+.chat-session-avatar-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  background: linear-gradient(145deg, rgba(59, 110, 168, 0.45), rgba(0, 0, 0, 0.35));
+}
+.chat-session-avatars-grid .chat-session-avatar-letter {
+  font-size: 0.52rem;
+  border-radius: 0;
 }
 .chat-sidebar-item-main:hover {
   background: rgba(59, 110, 168, 0.14);

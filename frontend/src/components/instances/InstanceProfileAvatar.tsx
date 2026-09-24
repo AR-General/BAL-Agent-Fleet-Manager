@@ -5,9 +5,11 @@ type Props = {
   imageId: string | null | undefined;
   size?: number;
   title?: string;
+  /** Open lightbox on click (default true on Instances; false in chat lists). */
+  enlargeable?: boolean;
 };
 
-export function InstanceProfileAvatar({ slug, imageId, size = 40, title }: Props) {
+export function InstanceProfileAvatar({ slug, imageId, size = 40, title, enlargeable = true }: Props) {
   if (!imageId) {
     return (
       <span
@@ -27,7 +29,7 @@ export function InstanceProfileAvatar({ slug, imageId, size = 40, title }: Props
       alt=""
       title={title}
       lightboxTitle={title}
-      enlargeable
+      enlargeable={enlargeable}
       className="inst-avatar"
       fallbackClassName="inst-avatar inst-avatar-empty"
       width={size}
